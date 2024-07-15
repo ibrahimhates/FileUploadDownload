@@ -1,0 +1,57 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Download</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body style="background-color:dimgrey">
+    <div id="fileDownload">
+        <div v-for="file in files" :key="file.id">
+            <span>
+                {{file.fileAlias}}
+            </span>
+            <button v-on:click="fileDownload(file)">
+                Download
+            </button>
+        </div>
+    </div>
+    <script>
+        new Vue({
+            el: "#fileDownload",
+            data: {
+                files: []
+            },
+            mounted() {
+                axios.get('https://localhost:7202/api/v1/Files')
+                    .then(response => {
+                        this.files = response.data;
+                    }).catch(error => {
+                        console.error('Dosya isimleri al�n�rken hata olu�tu:', error);
+                    });
+            },
+            methods: {
+                fileDownload(file) {
+                    axios.get(`https://localhost:7202/api/v1/Files/download/${file.id}`, {
+                        responseType: 'blob', // Yan�t t�r� olarak blob kullan
+                    }).then(response => {
+
+                        // Dosya indirme i�lemi i�in gerekli kodlar
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', file.fileAlias); // Dosya ad�n� ayarla (id olarak)
+                        document.body.appendChild(link);
+                        link.click();
+                        link.parentNode.removeChild(link);
+                    }).catch(error => {
+                        console.error('Dosya indirilirken hata olu�tu:', error);
+                    });
+                },
+            }
+        })
+    </script>
+</body>
+</html>
